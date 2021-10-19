@@ -1,7 +1,7 @@
 import Service from '@ember/service';
 import { assert, deprecate } from '@ember/debug';
 import { dasherize } from '@ember/string';
-import { getOwner } from '@ember/application';
+import { getOwner, setOwner } from '@ember/application';
 
 export default class Metrics extends Service {
   /**
@@ -59,10 +59,10 @@ export default class Metrics extends Service {
    * configuration. This config is injected into the Service as
    * `options`.
    */
-  constructor() {
+  constructor(owner) {
     super(...arguments);
 
-    const owner = getOwner(this);
+    setOwner(this, owner);
 
     owner.registerOptionsForType('ember-metrics@metrics-adapter', {
       instantiate: false,
@@ -164,10 +164,8 @@ export default class Metrics extends Service {
    * @return {Adapter}
    */
   _activateAdapter({ adapterClass, config }) {
-    return adapterClass.create(getOwner(this).ownerInjection(), {
-      this: this,
-      config,
-    });
+    let adapter = new adapterClass(config, this, getOwner(this));
+    return adapter;
   }
 
   identify() {
